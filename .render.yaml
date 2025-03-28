@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: file-sharing-app
+    env: php
+    plan: free
+    buildCommand: "composer install"
+    startCommand: "php -S 0.0.0.0:10000 -t public"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: file_sharing_db
+          property: connectionString
+databases:
+  - name: file_sharing_db
+    plan: free
