@@ -79,7 +79,13 @@ foreach ($files as $file) {
         </div>
     </nav>
 
-    <div class="container py-4">
+        <div class="container py-4">
+        <?php if (isset($_GET['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php echo htmlspecialchars($_GET['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
         <div class="row mb-4">
             <div class="col-lg-8">
                 <h1 class="mb-0"><i class="bi bi-folder me-2"></i>Mes fichiers</h1>
