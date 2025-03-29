@@ -213,7 +213,7 @@ foreach ($files as $file) {
         </div>
     </div>
 
-    <footer class="bg-dark text-white mt-5 py-3">
+    <footer class="bg-dark text-white mt-5 py-3" class="margin-top:-100px">
         <div class="container text-center">
             <p class="mb-0">© <?= date('Y') ?> CloudStorage - Sécurisé avec chiffrement AES-256</p>
         </div>
