@@ -1,15 +1,15 @@
 <?php
 session_start();
-require '../config/db.php';
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
-    exit;
+    exit();
 }
+include 'connexion.php';
 
-// Récupérer les informations de l'utilisateur
-$userStmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
-$userStmt->execute([$_SESSION['user_id']]);
-$user = $userStmt->fetch();
+$user_id = $_SESSION['user_id'];
+$query = $conn->prepare("SELECT * FROM utilisateurs WHERE id = ?");
+$query->execute([$user_id]);
+$user = $query->fetch(PDO::FETCH_ASSOC);
 
 // Modifier le mot de passe
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -20,14 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($newPassword !== $confirmPassword) {
         $error = "Les nouveaux mots de passe ne correspondent pas.";
     } else {
-        $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt = $conn->prepare("SELECT password FROM utilisateurs WHERE id = ?");
+        $stmt->execute([$user_id]);
         $userData = $stmt->fetch();
 
         if (password_verify($oldPassword, $userData['password'])) {
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-            $updateStmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
-            $updateStmt->execute([$hashedPassword, $_SESSION['user_id']]);
+            $updateStmt = $conn->prepare("UPDATE utilisateurs SET password = ? WHERE id = ?");
+            $updateStmt->execute([$hashedPassword, $user_id]);
             $success = "Mot de passe mis à jour avec succès.";
         } else {
             $error = "Ancien mot de passe incorrect.";
@@ -35,29 +35,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - CloudStorage</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Profil</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light">
-    <div class="container py-5">
-        <h2 class="mb-4">Mon Profil</h2>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.php">Accueil</a></li>
+            <li><a href="profile.php">Profil</a></li>
+            <li><a href="logout.php">Déconnexion</a></li>
+        </ul>
+    </nav>
+    
+    <div class="profile-container">
+        <h2>Bienvenue, <?php echo htmlspecialchars($user['nom']); ?>!</h2>
+        <p>Email: <?php echo htmlspecialchars($user['email']); ?></p>
+        <p>Téléphone: <?php echo htmlspecialchars($user['telephone']); ?></p>
+        <a href="edit_profile.php">Modifier le profil</a>
+    </div>
+    
+    <div class="password-update-container">
+        <h3>Changer de mot de passe</h3>
         <?php if (isset($error)): ?>
             <div class="alert alert-danger"> <?= htmlspecialchars($error) ?> </div>
         <?php endif; ?>
         <?php if (isset($success)): ?>
             <div class="alert alert-success"> <?= htmlspecialchars($success) ?> </div>
         <?php endif; ?>
-        
-        <div class="card p-4">
-            <p><strong>Email :</strong> <?= htmlspecialchars($user['email']) ?></p>
-        </div>
-
-        <h3 class="mt-4">Changer de mot de passe</h3>
         <form method="post">
             <div class="mb-3">
                 <label for="old_password" class="form-label">Ancien mot de passe</label>
