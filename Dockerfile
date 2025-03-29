@@ -1,16 +1,19 @@
-# Utilise une image officielle PHP avec Apache
+# Image de base avec PHP et Apache
 FROM php:8.1-apache
 
-# Installe les extensions nécessaires (PDO MySQL pour ta base de données)
+# Installe PDO MySQL pour la connexion à la base
 RUN docker-php-ext-install pdo pdo_mysql
 
-# Copie ton code dans le conteneur
+# Copie tout ton code dans le conteneur
 COPY . /var/www/html/
 
 # Définit le dossier public comme racine du serveur web
-WORKDIR /var/www/html/public
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Expose le port 8080 (Render utilise ce port par défaut)
+# Active le module rewrite (optionnel, mais utile pour les URL propres si besoin)
+RUN a2enmod rewrite
+
+# Expose le port 8080 (standard pour Render)
 EXPOSE 8080
 
 # Configure Apache pour écouter le port 8080
