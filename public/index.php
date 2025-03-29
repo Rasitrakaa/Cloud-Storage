@@ -11,8 +11,8 @@ $userStmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
 $userStmt->execute([$_SESSION['user_id']]);
 $user = $userStmt->fetch();
 
-// Récupérer les fichiers de l'utilisateur
-$stmt = $pdo->prepare("SELECT *, SIZE(encrypted_path) AS file_size, DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') AS formatted_date FROM files WHERE user_id = ? ORDER BY created_at DESC");
+// Récupérer les fichiers de l'utilisateur - Requête corrigée pour PostgreSQL
+$stmt = $pdo->prepare("SELECT *, LENGTH(encrypted_path) AS file_size, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') AS formatted_date FROM files WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$_SESSION['user_id']]);
 $files = $stmt->fetchAll();
 
