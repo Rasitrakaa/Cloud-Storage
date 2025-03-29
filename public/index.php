@@ -22,10 +22,9 @@ foreach ($files as $file) {
     $filePath = '../uploads/' . $file['encrypted_path'];
     if (file_exists($filePath)) {
         $fileSize = filesize($filePath);
-        $file['file_size'] = $fileSize; // Ajoute la taille réelle au tableau $file pour l'affichage
         $totalSize += $fileSize;
     } else {
-        $file['file_size'] = 0; // Si le fichier n'existe pas, taille = 0
+        error_log("Fichier manquant : " . $filePath); // Ajout d'un log pour déboguer
     }
 }
 ?>
@@ -178,7 +177,8 @@ foreach ($files as $file) {
                                             </td>
                                             <td class="text-center">
                                                 <?php 
-                                                    $fileSize = isset($file['file_size']) ? $file['file_size'] : 0;
+                                                    $filePath = '../uploads/' . $file['encrypted_path'];
+                                                    $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
                                                     if ($fileSize < 1024) {
                                                         echo $fileSize . ' o';
                                                     } elseif ($fileSize < 1024*1024) {
