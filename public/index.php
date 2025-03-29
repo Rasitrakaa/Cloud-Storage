@@ -12,14 +12,21 @@ $userStmt->execute([$_SESSION['user_id']]);
 $user = $userStmt->fetch();
 
 // Récupérer les fichiers de l'utilisateur - Requête corrigée pour PostgreSQL
-$stmt = $pdo->prepare("SELECT *, LENGTH(encrypted_path) AS file_size, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') AS formatted_date FROM files WHERE user_id = ? ORDER BY created_at DESC");
+$stmt = $pdo->prepare("SELECT *, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') AS formatted_date FROM files WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$_SESSION['user_id']]);
 $files = $stmt->fetchAll();
 
 // Calculer l'espace utilisé
 $totalSize = 0;
 foreach ($files as $file) {
-    $totalSize += isset($file['file_size']) ? $file['file_size'] : 0;
+    $filePath = '../uploads/' . $file['encrypted_path'];
+    if (file_exists($filePath)) {
+        $fileSize = filesize($filePath);
+        $file['file_size'] = $fileSize; // Ajoute la taille réelle au tableau $file pour l'affichage
+        $totalSize += $fileSize;
+    } else {
+        $file['file_size'] = 0; // Si le fichier n'existe pas, taille = 0
+    }
 }
 ?>
 <!DOCTYPE html>
