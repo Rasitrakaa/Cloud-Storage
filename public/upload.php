@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
         switch ($file['error']) {
             case UPLOAD_ERR_INI_SIZE:
             case UPLOAD_ERR_FORM_SIZE:
-                $error = "Le fichier est trop volumineux.";
+                $error = "Le fichier est trop volumineux. La taille maximale autorisée est 1 Go.";
                 break;
             case UPLOAD_ERR_PARTIAL:
                 $error = "Le fichier n'a été que partiellement téléchargé.";
@@ -27,31 +27,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
                 $error = "Une erreur est survenue lors de l'upload.";
         }
     } else {
-        // Chiffrement du fichier
-        $key = 'ma_cle_secrete_32_caracteres!'; // Clé de 32 caractères pour AES-256
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-        $encrypted = openssl_encrypt(file_get_contents($file['tmp_name']), 'aes-256-cbc', $key, 0, $iv);
-        
-        // Préparation du dossier de stockage
-        $uploadDir = '../uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        
-        $filename = uniqid() . '.enc';
-        $filePath = $uploadDir . $filename;
-        
-        // Écriture du fichier chiffré
-        if (file_put_contents($filePath, $iv . $encrypted) !== false) {
-            $stmt = $pdo->prepare("INSERT INTO files (user_id, original_name, encrypted_path) VALUES (?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $file['name'], $filename]);
-            
-            // Redirection avec un message de succès
-            $_SESSION['success_message'] = "Votre fichier a été chiffré et uploadé avec succès!";
-            header("Location: index.php");
-            exit;
+        // Vérification de la taille côté serveur (redondance pour plus de sécurité)
+        $maxFileSize = 1024 * 1024 * 1024; // 1 Go en octets
+        if ($file['size'] > $maxFileSize) {
+            $error = "Le fichier est trop volumineux. La taille maximale autorisée est 1 Go.";
         } else {
-            $error = "Erreur lors de l'upload : impossible d'écrire le fichier.";
+            // Chiffrement du fichier
+            $key = 'ma_cle_secrete_32_caracteres!'; // Clé de 32 caractères pour AES-256
+            $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+            $fileContent = file_get_contents($file['tmp_name']);
+            if ($fileContent === false) {
+                $error = "Erreur : Impossible de lire le fichier uploadé.";
+            } else {
+                $encrypted = openssl_encrypt($fileContent, 'aes-256-cbc', $key, 0, $iv);
+                if ($encrypted === false) {
+                    $error = "Erreur : Échec du chiffrement.";
+                } else {
+                    // Préparation du dossier de stockage
+                    $uploadDir = '../uploads/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    
+                    $filename = uniqid() . '.enc';
+                    $filePath = $uploadDir . $filename;
+                    
+                    // Écriture du fichier chiffré
+                    if (file_put_contents($filePath, $iv . $encrypted) !== false) {
+                        $stmt = $pdo->prepare("INSERT INTO files (user_id, original_name, encrypted_path) VALUES (?, ?, ?)");
+                        $stmt->execute([$_SESSION['user_id'], $file['name'], $filename]);
+                        
+                        // Redirection avec un message de succès
+                        $_SESSION['success_message'] = "Votre fichier a été chiffré et uploadé avec succès!";
+                        header("Location: index.php");
+                        exit;
+                    } else {
+                        $error = "Erreur lors de l'upload : impossible d'écrire le fichier.";
+                    }
+                }
+            }
         }
     }
 }
@@ -253,7 +267,7 @@ $max_upload = str_replace('M', ' MB', $max_upload);
         
         <?php if (isset($error)): ?>
             <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
+                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
         
@@ -279,7 +293,7 @@ $max_upload = str_replace('M', ' MB', $max_upload);
             </button>
             
             <p class="upload-info">
-                <i class="fas fa-info-circle"></i> Taille maximale: <?php echo $max_upload; ?><br>
+                <i class="fas fa-info-circle"></i> Taille maximale: 1 Go<br>
                 <small>Les fichiers sont chiffrés avant d'être stockés</small>
             </p>
         </form>
@@ -295,13 +309,22 @@ $max_upload = str_replace('M', ' MB', $max_upload);
         const progressBar = document.getElementById('progress-bar');
         const uploadForm = document.getElementById('upload-form');
         
-        // Gestion de l'affichage du nom du fichier sélectionné
+        // Gestion de l'affichage du nom du fichier sélectionné et vérification de la taille
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
-                const fileName = this.files[0].name;
-                const fileSize = (this.files[0].size / (1024 * 1024)).toFixed(2);
-                fileNameDisplay.innerHTML = `<i class="fas fa-file"></i> ${fileName} (${fileSize} MB)`;
-                submitBtn.disabled = false;
+                const file = this.files[0];
+                const fileSize = file.size; // Taille en octets
+                const maxSize = 1024 * 1024 * 1024; // 1 Go en octets
+
+                if (fileSize > maxSize) {
+                    fileNameDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> Fichier trop volumineux (${(fileSize / (1024 * 1024)).toFixed(2)} MB). Limite : 1 Go`;
+                    submitBtn.disabled = true;
+                } else {
+                    const fileName = file.name;
+                    const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                    fileNameDisplay.innerHTML = `<i class="fas fa-file"></i> ${fileName} (${fileSizeMB} MB)`;
+                    submitBtn.disabled = false;
+                }
             } else {
                 fileNameDisplay.textContent = '';
                 submitBtn.disabled = true;

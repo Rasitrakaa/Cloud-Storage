@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y \
 # Copie tout ton code dans le conteneur
 COPY . /var/www/html/
 
+# Copier le fichier php.ini personnalisé
+COPY config/php.ini /usr/local/etc/php/php.ini
+
 # Définit le dossier public comme racine du serveur web
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
