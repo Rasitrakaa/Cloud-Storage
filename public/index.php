@@ -31,6 +31,23 @@ foreach ($files as $file) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        /* Assure que le body utilise flexbox pour pousser le footer en bas */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        /* Le contenu principal prend tout l'espace disponible */
+        .main-content {
+            flex: 1 0 auto;
+        }
+        /* Le footer reste en bas */
+        footer {
+            flex-shrink: 0;
+        }
         .file-list {
             max-height: 60vh;
             overflow-y: auto;
@@ -79,116 +96,119 @@ foreach ($files as $file) {
         </div>
     </nav>
 
+    <!-- Contenu principal -->
+    <div class="main-content">
         <div class="container py-4">
-        <?php if (isset($_GET['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?php echo htmlspecialchars($_GET['success']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <?php if (isset($_GET['success'])): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($_GET['success']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <h1 class="mb-0"><i class="bi bi-folder me-2"></i>Mes fichiers</h1>
+                    <p class="text-muted">Espace utilisé: <?= round($totalSize / (1024*1024), 2) ?> Mo</p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="upload.php" class="btn btn-primary btn-lg"><i class="bi bi-cloud-upload me-2"></i>Uploader</a>
+                </div>
             </div>
-        <?php endif; ?>
-        <div class="row mb-4">
-            <div class="col-lg-8">
-                <h1 class="mb-0"><i class="bi bi-folder me-2"></i>Mes fichiers</h1>
-                <p class="text-muted">Espace utilisé: <?= round($totalSize / (1024*1024), 2) ?> Mo</p>
-            </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <a href="upload.php" class="btn btn-primary btn-lg"><i class="bi bi-cloud-upload me-2"></i>Uploader</a>
-            </div>
-        </div>
 
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <div class="row align-items-center">
-                    <div class="col-md-6 mb-2 mb-md-0">
-                        <div class="search-container">
-                            <i class="bi bi-search text-muted"></i>
-                            <input type="text" id="searchFiles" class="form-control" placeholder="Rechercher un fichier...">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="search-container">
+                                <i class="bi bi-search text-muted"></i>
+                                <input type="text" id="searchFiles" class="form-control" placeholder="Rechercher un fichier...">
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <div class="btn-group">
-                            <button type="button" id="sortByName" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-sort-alpha-down me-1"></i>Nom
-                            </button>
-                            <button type="button" id="sortByDate" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-calendar me-1"></i>Date
-                            </button>
+                        <div class="col-md-6 text-md-end">
+                            <div class="btn-group">
+                                <button type="button" id="sortByName" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-sort-alpha-down me-1"></i>Nom
+                                </button>
+                                <button type="button" id="sortByDate" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-calendar me-1"></i>Date
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="card-body p-0">
-                <?php if (count($files) > 0): ?>
-                    <div class="file-list">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="filesTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col">Nom</th>
-                                        <th scope="col" class="text-center">Taille</th>
-                                        <th scope="col" class="text-center">Date</th>
-                                        <th scope="col" class="text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($files as $file): 
-                                        $fileExt = pathinfo($file['original_name'], PATHINFO_EXTENSION);
-                                        $iconClass = "bi-file";
-                                        switch(strtolower($fileExt)) {
-                                            case 'pdf': $iconClass = "bi-file-pdf"; break;
-                                            case 'jpg': case 'jpeg': case 'png': case 'gif': $iconClass = "bi-file-image"; break;
-                                            case 'doc': case 'docx': $iconClass = "bi-file-word"; break;
-                                            case 'xls': case 'xlsx': $iconClass = "bi-file-excel"; break;
-                                            case 'zip': case 'rar': $iconClass = "bi-file-zip"; break;
-                                            case 'mp3': case 'wav': $iconClass = "bi-file-music"; break;
-                                            case 'mp4': case 'avi': $iconClass = "bi-file-play"; break;
-                                        }
-                                    ?>
-                                    <tr>
-                                        <td>
-                                            <i class="bi <?= $iconClass ?> me-2 text-muted"></i>
-                                            <?= htmlspecialchars($file['original_name']) ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <?php 
-                                                $fileSize = isset($file['file_size']) ? $file['file_size'] : 0;
-                                                if ($fileSize < 1024) {
-                                                    echo $fileSize . ' o';
-                                                } elseif ($fileSize < 1024*1024) {
-                                                    echo round($fileSize/1024, 2) . ' Ko';
-                                                } else {
-                                                    echo round($fileSize/(1024*1024), 2) . ' Mo';
-                                                }
-                                            ?>
-                                        </td>
-                                        <td class="text-center"><?= $file['formatted_date'] ?? date('d/m/Y H:i', strtotime($file['created_at'])) ?></td>
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                <a href="download.php?id=<?= $file['id'] ?>" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?= $file['id'] ?>, '<?= htmlspecialchars($file['original_name']) ?>')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                
+                <div class="card-body p-0">
+                    <?php if (count($files) > 0): ?>
+                        <div class="file-list">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0" id="filesTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Nom</th>
+                                            <th scope="col" class="text-center">Taille</th>
+                                            <th scope="col" class="text-center">Date</th>
+                                            <th scope="col" class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($files as $file): 
+                                            $fileExt = pathinfo($file['original_name'], PATHINFO_EXTENSION);
+                                            $iconClass = "bi-file";
+                                            switch(strtolower($fileExt)) {
+                                                case 'pdf': $iconClass = "bi-file-pdf"; break;
+                                                case 'jpg': case 'jpeg': case 'png': case 'gif': $iconClass = "bi-file-image"; break;
+                                                case 'doc': case 'docx': $iconClass = "bi-file-word"; break;
+                                                case 'xls': case 'xlsx': $iconClass = "bi-file-excel"; break;
+                                                case 'zip': case 'rar': $iconClass = "bi-file-zip"; break;
+                                                case 'mp3': case 'wav': $iconClass = "bi-file-music"; break;
+                                                case 'mp4': case 'avi': $iconClass = "bi-file-play"; break;
+                                            }
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <i class="bi <?= $iconClass ?> me-2 text-muted"></i>
+                                                <?= htmlspecialchars($file['original_name']) ?>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php 
+                                                    $fileSize = isset($file['file_size']) ? $file['file_size'] : 0;
+                                                    if ($fileSize < 1024) {
+                                                        echo $fileSize . ' o';
+                                                    } elseif ($fileSize < 1024*1024) {
+                                                        echo round($fileSize/1024, 2) . ' Ko';
+                                                    } else {
+                                                        echo round($fileSize/(1024*1024), 2) . ' Mo';
+                                                    }
+                                                ?>
+                                            </td>
+                                            <td class="text-center"><?= $file['formatted_date'] ?? date('d/m/Y H:i', strtotime($file['created_at'])) ?></td>
+                                            <td class="text-center">
+                                                <div class="btn-group">
+                                                    <a href="download.php?id=<?= $file['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?= $file['id'] ?>, '<?= htmlspecialchars($file['original_name']) ?>')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                <?php else: ?>
-                    <div class="text-center py-5">
-                        <i class="bi bi-folder-x display-1 text-muted"></i>
-                        <p class="h4 mt-3">Aucun fichier trouvé</p>
-                        <p class="text-muted">Commencez à uploader des fichiers pour les voir apparaître ici</p>
-                        <a href="upload.php" class="btn btn-primary mt-2">
-                            <i class="bi bi-cloud-upload me-2"></i>Uploader un fichier
-                        </a>
-                    </div>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <div class="text-center py-5">
+                            <i class="bi bi-folder-x display-1 text-muted"></i>
+                            <p class="h4 mt-3">Aucun fichier trouvé</p>
+                            <p class="text-muted">Commencez à uploader des fichiers pour les voir apparaître ici</p>
+                            <a href="upload.php" class="btn btn-primary mt-2">
+                                <i class="bi bi-cloud-upload me-2"></i>Uploader un fichier
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -213,7 +233,7 @@ foreach ($files as $file) {
         </div>
     </div>
 
-    <footer class="bg-dark text-white mt-5 py-3" class="margin-top:-100px">
+    <footer class="bg-dark text-white py-3">
         <div class="container text-center">
             <p class="mb-0">© <?= date('Y') ?> CloudStorage - Sécurisé avec chiffrement AES-256</p>
         </div>
