@@ -13,18 +13,26 @@ if (isset($_GET['id'])) {
     $file = $stmt->fetch();
 
     if ($file) {
-        // Chemin absolu pour lire le fichier
-        $filePath = '/var/www/html/' . $file['encrypted_path'];
+        $filePath = '../uploads/' . $file['encrypted_path'];
         if (file_exists($filePath)) {
+            $key = 'ma_cle_secrete_32_caracteres!';
+            $data = file_get_contents($filePath);
+            $iv = substr($data, 0, 16); // Récupère l'IV
+            $encrypted = substr($data, 16);
+            $decrypted = openssl_decrypt($encrypted, 'aes-256-cbc', $key, 0, $iv);
+            if ($decrypted === false) {
+                die("Erreur lors du déchiffrement.");
+            }
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename="' . $file['original_name'] . '"');
-            readfile($filePath);
+            echo $decrypted;
             exit;
         } else {
-            die("Fichier non trouvé sur le serveur.");
+            die("Fichier non trouvé sur le serveur : " . $filePath);
         }
     } else {
         die("Fichier non trouvé dans la base de données.");
     }
 }
+die("ID de fichier non spécifié.");
 ?>
