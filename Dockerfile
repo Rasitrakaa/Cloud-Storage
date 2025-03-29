@@ -1,8 +1,10 @@
 # Image de base avec PHP et Apache
 FROM php:8.1-apache
 
-# Installe PDO MySQL pour la connexion à la base
-RUN docker-php-ext-install pdo pdo_mysql
+# Installe les dépendances nécessaires pour pdo_pgsql
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
 
 # Copie tout ton code dans le conteneur
 COPY . /var/www/html/
