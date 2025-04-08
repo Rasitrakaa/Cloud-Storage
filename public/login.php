@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         
         <div class="text-center mt-3 text-muted">
-            <small>© <?= date('Y') ?> CloudStorage - Sécurisé avec chiffrement AES-256</small>
+            <small>© <?= date('Y') ?> CloudStorage</small>
         </div>
     </div>
     
