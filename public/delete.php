@@ -21,11 +21,11 @@ if (isset($_GET['id'])) {
             unlink($filePath);
         }
 
-        // Supprime l'entrée de la base de données
+      
         $deleteStmt = $pdo->prepare("DELETE FROM files WHERE id = ? AND user_id = ?");
         $deleteStmt->execute([$_GET['id'], $_SESSION['user_id']]);
 
-        // Redirige vers index.php avec un message de succès
+
         header("Location: index.php?success=Fichier supprimé avec succès.");
         exit;
     } else {
