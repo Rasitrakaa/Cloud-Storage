@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['password_confirm'] = "Les mots de passe ne correspondent pas.";
     }
     
-    // Création du compte si pas d'erreurs
+    // Création du compte 
     if (empty($errors)) {
         try {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
