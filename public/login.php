@@ -154,9 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </button>
                     </div>
                     
-                    <div class="text-center mt-3">
-                        <a href="forgot_password.php" class="text-decoration-none">Mot de passe oublié ?</a>
-                    </div>
+                    
                 </form>
             </div>
             
