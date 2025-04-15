@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Gestion de l'upload du fichier
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     $file = $_FILES['file'];
     
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
         }
     } else {
         // Vérification de la taille côté serveur (redondance pour plus de sécurité)
-        $maxFileSize = 1024 * 1024 * 1024; // 1 Go en octets
+        $maxFileSize = 1024 * 1024 * 1024; 
         if ($file['size'] > $maxFileSize) {
             $error = "Le fichier est trop volumineux. La taille maximale autorisée est 1 Go.";
         } else {
