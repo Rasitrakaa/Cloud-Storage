@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['password'] = "Veuillez entrer votre mot de passe.";
     }
     
-    // Vérification des identifiants si pas d'erreurs
+    // Vérification des identifiants 
     if (empty($errors)) {
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$email]);
